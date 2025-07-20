@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Assistant Button Card Editor v0.0.2.1</title>
+    <title>HA Button Card WYSIWYG v0.0.2.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Fallback styles in case Tailwind doesn't load */
@@ -15,7 +15,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background-color: #f9fafb;
             margin: 0;
-            padding: 20px;
+            padding: 0 0 20px 0;
             line-height: 1.5;
         }
         
@@ -27,9 +27,20 @@
         .main-title {
             font-size: 2rem;
             font-weight: bold;
-            color: #1f2937;
+            color: #FFFFFF;
+            text-align: center;
+            background-color: #1abcf2;
+            padding: 20px 0 0 0;
+        }
+
+        .version-number {
+            font-size: 1rem;
+            font-weight: regular;
+            color: #FFFFFF;
             text-align: center;
             margin-bottom: 2rem;
+            background-color: #1abcf2;
+            padding: 0 0 20px 0;
         }
         
         .layout-grid {
@@ -56,6 +67,13 @@
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title-text {
+            flex: 1;
         }
         
         .section {
@@ -360,16 +378,94 @@
             color: #0891b2;
             margin-bottom: 8px;
         }
+
+        .section-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .section-control-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .section-control-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .section-control-link.disabled {
+            color: #9ca3af;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        .section-control-link.disabled:hover {
+            color: #9ca3af;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+<h1 class="main-title">HA Button Card WYSIWYG</h1>
+<div class="version-number">Version v0.0.2.2</div>
+    
     <div class="container">
-        <h1 class="main-title">Home Assistant Button Card Editor v0.0.2.1</h1>
         
         <div class="layout-grid">
             <!-- Left Panel - WYSIWYG Editor -->
             <div class="panel">
-                <h2 class="panel-title">Card Settings</h2>
+                <h2 class="panel-title">
+                    <span class="panel-title-text">Card Settings</span>
+                    <div class="section-controls">
+                        <span class="section-control-link" id="expandAllLink" onclick="expandAllSections()">Expand All</span>
+                        <span class="section-control-link" id="collapseAllLink" onclick="collapseAllSections()">Collapse All</span>
+                    </div>
+                </h2>
+
+                <!-- Content Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('content')">
+                        <span>Entity & Content</span>
+                        <span class="arrow" id="content-arrow">▼</span>
+                    </div>
+                    <div class="section-content" id="content-content">
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label class="form-label">Entity</label>
+                                <input type="text" id="entity" value="sensor.helper_count_lights_on_interior" class="form-input">
+                            </div>
+                            <div class="form-group form-grid-full">
+                                <label class="form-label">Name</label>
+                                <input type="text" id="cardName" value="Lights On (Inside)" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show Name</label>
+                                <select id="showName" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show Icon</label>
+                                <select id="showIcon" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show State</label>
+                                <select id="showState" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Card Section -->
                 <div class="section">
@@ -377,7 +473,7 @@
                         <span>Card</span>
                         <span class="arrow" id="card-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="card-content">
+                    <div class="section-content" id="card-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">Background Color</label>
@@ -413,7 +509,7 @@
                         <span>Icon</span>
                         <span class="arrow" id="icon-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="icon-content">
+                    <div class="section-content" id="icon-content">
                         <div class="form-grid">
                             <div class="form-group form-grid-full">
                                 <label class="form-label">Icon Name</label>
@@ -449,7 +545,7 @@
                         <span>Typography</span>
                         <span class="arrow" id="typography-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="typography-content">
+                    <div class="section-content" id="typography-content">
                         <div class="form-grid">
                             <div class="form-group form-grid-full">
                                 <label class="form-label">Font Family</label>
@@ -490,7 +586,7 @@
                         <span>Layout</span>
                         <span class="arrow" id="layout-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="layout-content">
+                    <div class="section-content" id="layout-content">
                         <div class="form-grid" style="grid-template-columns: 1fr;">
                             <div class="form-group">
                                 <label class="form-label">Grid Template Areas</label>
@@ -507,47 +603,6 @@
                             <div class="form-group">
                                 <label class="form-label">Gap</label>
                                 <input type="text" id="gridGap" value="0 10px" class="form-input">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Content Section -->
-                <div class="section">
-                    <div class="section-header" onclick="toggleSection('content')">
-                        <span>Content</span>
-                        <span class="arrow" id="content-arrow">▼</span>
-                    </div>
-                    <div class="section-content open" id="content-content">
-                        <div class="form-grid">
-                            <div class="form-group form-grid-full">
-                                <label class="form-label">Entity</label>
-                                <input type="text" id="entity" value="sensor.helper_count_lights_on_interior" class="form-input">
-                            </div>
-                            <div class="form-group form-grid-full">
-                                <label class="form-label">Name</label>
-                                <input type="text" id="cardName" value="Lights On (Inside)" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Show Name</label>
-                                <select id="showName" class="form-input">
-                                    <option value="true" selected>True</option>
-                                    <option value="false">False</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Show Icon</label>
-                                <select id="showIcon" class="form-input">
-                                    <option value="true" selected>True</option>
-                                    <option value="false">False</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Show State</label>
-                                <select id="showState" class="form-input">
-                                    <option value="true" selected>True</option>
-                                    <option value="false">False</option>
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -572,16 +627,6 @@
                 <div class="panel">
                     <h2 class="panel-title">Preview</h2>
                     
-                    <!-- State Selector -->
-                    <div class="state-selector">
-                        <div class="state-selector-label">Mock Entity State (for preview)</div>
-                        <select id="mockEntityState" class="form-input" onchange="updatePreview()">
-                            <option value="on">on</option>
-                            <option value="off">off</option>
-                            <option value="unavailable">unavailable</option>
-                        </select>
-                    </div>
-                    
                     <div class="preview-container">
                         <div id="cardPreview" class="card-preview">
                             <div class="icon-area">
@@ -591,6 +636,16 @@
                             <div class="state-area">5</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- State Selector -->
+                <div class="state-selector">
+                    <div class="state-selector-label">Mock Entity State (for preview)</div>
+                    <select id="mockEntityState" class="form-input" onchange="updatePreview()">
+                        <option value="on">on</option>
+                        <option value="off">off</option>
+                        <option value="unavailable">unavailable</option>
+                    </select>
                 </div>
 
                 <!-- YAML Output -->
@@ -612,8 +667,14 @@
         let stateConditions = [];
         let stateConditionCounter = 0;
 
+        // Main sections for expand/collapse functionality
+        const mainSections = ['card', 'icon', 'typography', 'layout', 'content', 'stateStyles'];
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Load section states from localStorage
+            loadSectionStates();
+            
             // Add event listeners to all inputs
             const inputs = document.querySelectorAll('input, select');
             inputs.forEach(input => {
@@ -626,7 +687,102 @@
             // Initialize display
             updatePreview();
             updateYaml();
+            updateSectionControls();
         });
+
+        function loadSectionStates() {
+            const savedStates = localStorage.getItem('ha-button-card-editor-sections');
+            if (savedStates) {
+                try {
+                    const states = JSON.parse(savedStates);
+                    mainSections.forEach(sectionId => {
+                        const isOpen = states[sectionId] || false;
+                        const content = document.getElementById(sectionId + '-content');
+                        const arrow = document.getElementById(sectionId + '-arrow');
+                        
+                        if (isOpen) {
+                            content.classList.add('open');
+                            arrow.textContent = '▼';
+                            arrow.classList.remove('rotated');
+                        } else {
+                            content.classList.remove('open');
+                            arrow.textContent = '▶';
+                            arrow.classList.add('rotated');
+                        }
+                    });
+                } catch (error) {
+                    console.log('Error loading section states:', error);
+                    // If there's an error, all sections will remain collapsed (default state)
+                }
+            }
+        }
+
+        function saveSectionStates() {
+            const states = {};
+            mainSections.forEach(sectionId => {
+                const content = document.getElementById(sectionId + '-content');
+                states[sectionId] = content.classList.contains('open');
+            });
+            localStorage.setItem('ha-button-card-editor-sections', JSON.stringify(states));
+        }
+
+        function updateSectionControls() {
+            const expandAllLink = document.getElementById('expandAllLink');
+            const collapseAllLink = document.getElementById('collapseAllLink');
+            
+            const openSections = mainSections.filter(sectionId => {
+                const content = document.getElementById(sectionId + '-content');
+                return content.classList.contains('open');
+            });
+            
+            // Update Expand All button
+            if (openSections.length === mainSections.length) {
+                expandAllLink.classList.add('disabled');
+            } else {
+                expandAllLink.classList.remove('disabled');
+            }
+            
+            // Update Collapse All button
+            if (openSections.length === 0) {
+                collapseAllLink.classList.add('disabled');
+            } else {
+                collapseAllLink.classList.remove('disabled');
+            }
+        }
+
+        function expandAllSections() {
+            const expandAllLink = document.getElementById('expandAllLink');
+            if (expandAllLink.classList.contains('disabled')) return;
+            
+            mainSections.forEach(sectionId => {
+                const content = document.getElementById(sectionId + '-content');
+                const arrow = document.getElementById(sectionId + '-arrow');
+                
+                content.classList.add('open');
+                arrow.textContent = '▼';
+                arrow.classList.remove('rotated');
+            });
+            
+            saveSectionStates();
+            updateSectionControls();
+        }
+
+        function collapseAllSections() {
+            const collapseAllLink = document.getElementById('collapseAllLink');
+            if (collapseAllLink.classList.contains('disabled')) return;
+            
+            mainSections.forEach(sectionId => {
+                const content = document.getElementById(sectionId + '-content');
+                const arrow = document.getElementById(sectionId + '-arrow');
+                
+                content.classList.remove('open');
+                arrow.textContent = '▶';
+                arrow.classList.add('rotated');
+            });
+            
+            saveSectionStates();
+            updateSectionControls();
+        }
 
         function toggleSection(sectionId) {
             const content = document.getElementById(sectionId + '-content');
@@ -641,6 +797,10 @@
                 arrow.textContent = '▶';
                 arrow.classList.add('rotated');
             }
+            
+            // Save state and update controls
+            saveSectionStates();
+            updateSectionControls();
         }
 
         function toggleStateCondition(conditionId) {
