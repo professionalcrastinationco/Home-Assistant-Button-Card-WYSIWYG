@@ -412,6 +412,47 @@
                         <span class="section-control-link" id="collapseAllLink" onclick="collapseAllSections()">Collapse All</span>
                     </div>
                 </h2>
+
+                <!-- Content Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('content')">
+                        <span>Content</span>
+                        <span class="arrow" id="content-arrow">▼</span>
+                    </div>
+                    <div class="section-content" id="content-content">
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label class="form-label">Entity</label>
+                                <input type="text" id="entity" value="sensor.helper_count_lights_on_interior" class="form-input">
+                            </div>
+                            <div class="form-group form-grid-full">
+                                <label class="form-label">Name</label>
+                                <input type="text" id="cardName" value="Lights On (Inside)" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show Name</label>
+                                <select id="showName" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show Icon</label>
+                                <select id="showIcon" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show State</label>
+                                <select id="showState" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Card Section -->
                 <div class="section">
@@ -549,47 +590,6 @@
                             <div class="form-group">
                                 <label class="form-label">Gap</label>
                                 <input type="text" id="gridGap" value="0 10px" class="form-input">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Content Section -->
-                <div class="section">
-                    <div class="section-header" onclick="toggleSection('content')">
-                        <span>Content</span>
-                        <span class="arrow" id="content-arrow">▼</span>
-                    </div>
-                    <div class="section-content" id="content-content">
-                        <div class="form-grid">
-                            <div class="form-group form-grid-full">
-                                <label class="form-label">Entity</label>
-                                <input type="text" id="entity" value="sensor.helper_count_lights_on_interior" class="form-input">
-                            </div>
-                            <div class="form-group form-grid-full">
-                                <label class="form-label">Name</label>
-                                <input type="text" id="cardName" value="Lights On (Inside)" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Show Name</label>
-                                <select id="showName" class="form-input">
-                                    <option value="true" selected>True</option>
-                                    <option value="false">False</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Show Icon</label>
-                                <select id="showIcon" class="form-input">
-                                    <option value="true" selected>True</option>
-                                    <option value="false">False</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Show State</label>
-                                <select id="showState" class="form-input">
-                                    <option value="true" selected>True</option>
-                                    <option value="false">False</option>
-                                </select>
                             </div>
                         </div>
                     </div>
