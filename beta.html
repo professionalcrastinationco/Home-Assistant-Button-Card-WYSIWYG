@@ -557,7 +557,7 @@
 </head>
 <body>
 <h1 class="main-title">HA Button Card WYSIWYG</h1>
-<div class="version-number">Version v0.0.2.3</div>
+<div class="version-number">Version v0.0.2.3-a2</div>
     
     <div class="container">
         
@@ -826,14 +826,14 @@
 
     <script>
         // Global variables for state-based styling
-        var stateConditions = [];
-        var stateConditionCounter = 0;
+        let stateConditions = [];
+        let stateConditionCounter = 0;
 
         // Main sections for expand/collapse functionality
-        var mainSections = ['card', 'icon', 'typography', 'layout', 'content', 'stateStyles'];
+        const mainSections = ['card', 'icon', 'typography', 'layout', 'content', 'stateStyles'];
 
         // Theme definitions
-        var themes = {
+        const themes = {
             modernDark: {
                 name: 'Modern Dark',
                 settings: {
@@ -946,52 +946,14 @@
             }
         };
 
-
-        // Themes Modal Functions - Declared globally
-        function openThemesModal() {
-            var modal = document.getElementById('themesModal');
-            modal.classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeThemesModal(event) {
-            if (event && event.target !== event.currentTarget && !event.currentTarget.contains(event.target)) {
-                return;
-            }
-            
-            var modal = document.getElementById('themesModal');
-            modal.classList.remove('open');
-            document.body.style.overflow = '';
-        }
-
-        function applyTheme(themeKey) {
-            var theme = themes[themeKey];
-            var settings = theme.settings;
-
-            // Apply theme settings to form inputs (preserving content settings)
-            Object.keys(settings).forEach(function(settingKey) {
-                var element = document.getElementById(settingKey);
-                if (element) {
-                    element.value = settings[settingKey];
-                }
-            });
-
-            // Update preview and YAML
-            updatePreview();
-            updateYaml();
-
-            // Close modal
-            closeThemesModal();
-        }
-
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Load section states from localStorage
             loadSectionStates();
             
             // Add event listeners to all inputs
-            var inputs = document.querySelectorAll('input, select');
-            inputs.forEach(function(input) {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
                 input.addEventListener('input', function() {
                     updatePreview();
                     updateYaml();
