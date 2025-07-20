@@ -360,6 +360,36 @@
             color: #0891b2;
             margin-bottom: 8px;
         }
+
+        .section-controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .section-control-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin: 0 12px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .section-control-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .section-control-link.disabled {
+            color: #9ca3af;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        .section-control-link.disabled:hover {
+            color: #9ca3af;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -371,13 +401,19 @@
             <div class="panel">
                 <h2 class="panel-title">Card Settings</h2>
                 
+                <!-- Section Controls -->
+                <div class="section-controls">
+                    <span class="section-control-link" id="expandAllLink" onclick="expandAllSections()">Expand All</span>
+                    <span class="section-control-link" id="collapseAllLink" onclick="collapseAllSections()">Collapse All</span>
+                </div>
+                
                 <!-- Card Section -->
                 <div class="section">
                     <div class="section-header" onclick="toggleSection('card')">
                         <span>Card</span>
                         <span class="arrow" id="card-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="card-content">
+                    <div class="section-content" id="card-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">Background Color</label>
@@ -413,7 +449,7 @@
                         <span>Icon</span>
                         <span class="arrow" id="icon-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="icon-content">
+                    <div class="section-content" id="icon-content">
                         <div class="form-grid">
                             <div class="form-group form-grid-full">
                                 <label class="form-label">Icon Name</label>
@@ -449,7 +485,7 @@
                         <span>Typography</span>
                         <span class="arrow" id="typography-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="typography-content">
+                    <div class="section-content" id="typography-content">
                         <div class="form-grid">
                             <div class="form-group form-grid-full">
                                 <label class="form-label">Font Family</label>
@@ -490,7 +526,7 @@
                         <span>Layout</span>
                         <span class="arrow" id="layout-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="layout-content">
+                    <div class="section-content" id="layout-content">
                         <div class="form-grid" style="grid-template-columns: 1fr;">
                             <div class="form-group">
                                 <label class="form-label">Grid Template Areas</label>
@@ -518,7 +554,7 @@
                         <span>Content</span>
                         <span class="arrow" id="content-arrow">▼</span>
                     </div>
-                    <div class="section-content open" id="content-content">
+                    <div class="section-content" id="content-content">
                         <div class="form-grid">
                             <div class="form-group form-grid-full">
                                 <label class="form-label">Entity</label>
@@ -612,8 +648,14 @@
         let stateConditions = [];
         let stateConditionCounter = 0;
 
+        // Main sections for expand/collapse functionality
+        const mainSections = ['card', 'icon', 'typography', 'layout', 'content', 'stateStyles'];
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Load section states from localStorage
+            loadSectionStates();
+            
             // Add event listeners to all inputs
             const inputs = document.querySelectorAll('input, select');
             inputs.forEach(input => {
@@ -626,7 +668,102 @@
             // Initialize display
             updatePreview();
             updateYaml();
+            updateSectionControls();
         });
+
+        function loadSectionStates() {
+            const savedStates = localStorage.getItem('ha-button-card-editor-sections');
+            if (savedStates) {
+                try {
+                    const states = JSON.parse(savedStates);
+                    mainSections.forEach(sectionId => {
+                        const isOpen = states[sectionId] || false;
+                        const content = document.getElementById(sectionId + '-content');
+                        const arrow = document.getElementById(sectionId + '-arrow');
+                        
+                        if (isOpen) {
+                            content.classList.add('open');
+                            arrow.textContent = '▼';
+                            arrow.classList.remove('rotated');
+                        } else {
+                            content.classList.remove('open');
+                            arrow.textContent = '▶';
+                            arrow.classList.add('rotated');
+                        }
+                    });
+                } catch (error) {
+                    console.log('Error loading section states:', error);
+                    // If there's an error, all sections will remain collapsed (default state)
+                }
+            }
+        }
+
+        function saveSectionStates() {
+            const states = {};
+            mainSections.forEach(sectionId => {
+                const content = document.getElementById(sectionId + '-content');
+                states[sectionId] = content.classList.contains('open');
+            });
+            localStorage.setItem('ha-button-card-editor-sections', JSON.stringify(states));
+        }
+
+        function updateSectionControls() {
+            const expandAllLink = document.getElementById('expandAllLink');
+            const collapseAllLink = document.getElementById('collapseAllLink');
+            
+            const openSections = mainSections.filter(sectionId => {
+                const content = document.getElementById(sectionId + '-content');
+                return content.classList.contains('open');
+            });
+            
+            // Update Expand All button
+            if (openSections.length === mainSections.length) {
+                expandAllLink.classList.add('disabled');
+            } else {
+                expandAllLink.classList.remove('disabled');
+            }
+            
+            // Update Collapse All button
+            if (openSections.length === 0) {
+                collapseAllLink.classList.add('disabled');
+            } else {
+                collapseAllLink.classList.remove('disabled');
+            }
+        }
+
+        function expandAllSections() {
+            const expandAllLink = document.getElementById('expandAllLink');
+            if (expandAllLink.classList.contains('disabled')) return;
+            
+            mainSections.forEach(sectionId => {
+                const content = document.getElementById(sectionId + '-content');
+                const arrow = document.getElementById(sectionId + '-arrow');
+                
+                content.classList.add('open');
+                arrow.textContent = '▼';
+                arrow.classList.remove('rotated');
+            });
+            
+            saveSectionStates();
+            updateSectionControls();
+        }
+
+        function collapseAllSections() {
+            const collapseAllLink = document.getElementById('collapseAllLink');
+            if (collapseAllLink.classList.contains('disabled')) return;
+            
+            mainSections.forEach(sectionId => {
+                const content = document.getElementById(sectionId + '-content');
+                const arrow = document.getElementById(sectionId + '-arrow');
+                
+                content.classList.remove('open');
+                arrow.textContent = '▶';
+                arrow.classList.add('rotated');
+            });
+            
+            saveSectionStates();
+            updateSectionControls();
+        }
 
         function toggleSection(sectionId) {
             const content = document.getElementById(sectionId + '-content');
@@ -641,6 +778,10 @@
                 arrow.textContent = '▶';
                 arrow.classList.add('rotated');
             }
+            
+            // Save state and update controls
+            saveSectionStates();
+            updateSectionControls();
         }
 
         function toggleStateCondition(conditionId) {
