@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HA Button Card WYSIWYG v0.0.2.2</title>
+    <title>HA Button Card WYSIWYG v0.0.2.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Fallback styles in case Tailwind doesn't load */
@@ -255,6 +255,23 @@
         .copy-button.copied {
             background: #10b981;
         }
+
+        .themes-button {
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-left: 12px;
+        }
+        
+        .themes-button:hover {
+            background: #059669;
+        }
         
         .yaml-header {
             display: flex;
@@ -277,6 +294,135 @@
             display: flex;
             flex-direction: column;
             gap: 24px;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 800px;
+            width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 4px;
+        }
+
+        .modal-close:hover {
+            color: #374151;
+        }
+
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .theme-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .theme-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .theme-preview {
+            display: grid;
+            grid-template-areas: 'i n' 'i s';
+            grid-template-rows: 1fr 1fr;
+            grid-template-columns: auto 1fr;
+            gap: 0 8px;
+            font-family: 'Roboto Condensed', sans-serif;
+            padding: 0 0 0 4px;
+            border-radius: 50px;
+            min-height: 48px;
+            align-items: center;
+            font-size: 11px;
+            margin: 0 auto;
+            max-width: 160px;
+        }
+
+        .theme-preview .icon-area {
+            width: 36px;
+            height: 36px;
+            border-radius: 50px;
+            padding: 8px;
+            font-size: 10px;
+        }
+
+        .theme-preview .name-area {
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: -4px;
+        }
+
+        .theme-preview .state-area {
+            font-size: 9px;
+            margin-top: -4px;
         }
 
         /* State-based styling CSS */
@@ -411,7 +557,7 @@
 </head>
 <body>
 <h1 class="main-title">HA Button Card WYSIWYG</h1>
-<div class="version-number">Version v0.0.2.2</div>
+<div class="version-number">Version v0.0.2.3</div>
     
     <div class="container">
         
@@ -625,7 +771,10 @@
             <div class="right-panel">
                 <!-- Card Preview -->
                 <div class="panel">
-                    <h2 class="panel-title">Preview</h2>
+                    <h2 class="panel-title">
+                        <span>Preview</span>
+                        <button onclick="openThemesModal()" class="themes-button">Themes</button>
+                    </h2>
                     
                     <div class="preview-container">
                         <div id="cardPreview" class="card-preview">
@@ -662,13 +811,177 @@
         </div>
     </div>
 
+    <!-- Themes Modal -->
+    <div id="themesModal" class="modal-overlay" onclick="closeThemesModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">Choose a Theme</h3>
+                <button class="modal-close" onclick="closeThemesModal()">&times;</button>
+            </div>
+            <div class="themes-grid" id="themesGrid">
+                <!-- Themes will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global variables for state-based styling
-        let stateConditions = [];
-        let stateConditionCounter = 0;
+        var stateConditions = [];
+        var stateConditionCounter = 0;
 
         // Main sections for expand/collapse functionality
-        const mainSections = ['card', 'icon', 'typography', 'layout', 'content', 'stateStyles'];
+        var mainSections = ['card', 'icon', 'typography', 'layout', 'content', 'stateStyles'];
+
+        // Theme definitions
+        var themes = {
+            modernDark: {
+                name: 'Modern Dark',
+                settings: {
+                    cardBackground: '#1f2937',
+                    cardBorderColor: '#374151',
+                    cardBorderWidth: '2',
+                    cardBorderRadius: '16',
+                    cardPadding: '0 0 0 8px',
+                    cardMinHeight: '72',
+                    iconColor: '#60a5fa',
+                    iconBackground: '#374151',
+                    iconBackgroundRadius: '12',
+                    iconPadding: '14',
+                    iconSize: '24',
+                    fontFamily: 'Inter',
+                    nameFontSize: '15',
+                    nameFontWeight: '600',
+                    nameColor: '#f9fafb',
+                    stateFontSize: '13',
+                    stateColor: '#9ca3af'
+                }
+            },
+            classicLight: {
+                name: 'Classic Light',
+                settings: {
+                    cardBackground: '#ffffff',
+                    cardBorderColor: '#d1d5db',
+                    cardBorderWidth: '1',
+                    cardBorderRadius: '8',
+                    cardPadding: '12px 16px',
+                    cardMinHeight: '80',
+                    iconColor: '#059669',
+                    iconBackground: '#ecfdf5',
+                    iconBackgroundRadius: '6',
+                    iconPadding: '12',
+                    iconSize: '20',
+                    fontFamily: 'Georgia',
+                    nameFontSize: '16',
+                    nameFontWeight: '700',
+                    nameColor: '#111827',
+                    stateFontSize: '14',
+                    stateColor: '#6b7280'
+                }
+            },
+            vibrant: {
+                name: 'Vibrant',
+                settings: {
+                    cardBackground: '#fef3c7',
+                    cardBorderColor: '#f59e0b',
+                    cardBorderWidth: '3',
+                    cardBorderRadius: '24',
+                    cardPadding: '0 0 0 8px',
+                    cardMinHeight: '68',
+                    iconColor: '#dc2626',
+                    iconBackground: '#fef2f2',
+                    iconBackgroundRadius: '50',
+                    iconPadding: '16',
+                    iconSize: '28',
+                    fontFamily: 'Arial Black',
+                    nameFontSize: '16',
+                    nameFontWeight: '800',
+                    nameColor: '#7c2d12',
+                    stateFontSize: '14',
+                    stateColor: '#ea580c'
+                }
+            },
+            minimal: {
+                name: 'Minimal',
+                settings: {
+                    cardBackground: '#fafafa',
+                    cardBorderColor: '#f5f5f5',
+                    cardBorderWidth: '0',
+                    cardBorderRadius: '0',
+                    cardPadding: '16px 20px',
+                    cardMinHeight: '60',
+                    iconColor: '#525252',
+                    iconBackground: 'transparent',
+                    iconBackgroundRadius: '0',
+                    iconPadding: '0',
+                    iconSize: '18',
+                    fontFamily: 'Helvetica Neue',
+                    nameFontSize: '14',
+                    nameFontWeight: '400',
+                    nameColor: '#171717',
+                    stateFontSize: '12',
+                    stateColor: '#a3a3a3'
+                }
+            },
+            retro: {
+                name: 'Retro',
+                settings: {
+                    cardBackground: '#fed7aa',
+                    cardBorderColor: '#ea580c',
+                    cardBorderWidth: '2',
+                    cardBorderRadius: '20',
+                    cardPadding: '0 0 0 6px',
+                    cardMinHeight: '70',
+                    iconColor: '#92400e',
+                    iconBackground: '#fbbf24',
+                    iconBackgroundRadius: '50',
+                    iconPadding: '12',
+                    iconSize: '24',
+                    fontFamily: 'Courier New',
+                    nameFontSize: '14',
+                    nameFontWeight: '700',
+                    nameColor: '#78350f',
+                    stateFontSize: '12',
+                    stateColor: '#a16207'
+                }
+            }
+        };
+
+        // Themes Modal Functions - Declared globally
+        function openThemesModal() {
+            var modal = document.getElementById('themesModal');
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeThemesModal(event) {
+            if (event && event.target !== event.currentTarget && !event.currentTarget.contains(event.target)) {
+                return;
+            }
+            
+            var modal = document.getElementById('themesModal');
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function applyTheme(themeKey) {
+            var theme = themes[themeKey];
+            var settings = theme.settings;
+
+            // Apply theme settings to form inputs (preserving content settings)
+            Object.keys(settings).forEach(function(settingKey) {
+                var element = document.getElementById(settingKey);
+                if (element) {
+                    element.value = settings[settingKey];
+                }
+            });
+
+            // Update preview and YAML
+            updatePreview();
+            updateYaml();
+
+            // Close modal
+            closeThemesModal();
+        }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -676,8 +989,8 @@
             loadSectionStates();
             
             // Add event listeners to all inputs
-            const inputs = document.querySelectorAll('input, select');
-            inputs.forEach(input => {
+            var inputs = document.querySelectorAll('input, select');
+            inputs.forEach(function(input) {
                 input.addEventListener('input', function() {
                     updatePreview();
                     updateYaml();
@@ -688,7 +1001,65 @@
             updatePreview();
             updateYaml();
             updateSectionControls();
+            populateThemes();
         });
+
+        function populateThemes() {
+            const grid = document.getElementById('themesGrid');
+            grid.innerHTML = '';
+
+            Object.keys(themes).forEach(themeKey => {
+                const theme = themes[themeKey];
+                const themeCard = document.createElement('div');
+                themeCard.className = 'theme-card';
+                themeCard.onclick = () => applyTheme(themeKey);
+
+                // Create preview based on theme settings
+                const preview = createThemePreview(theme.settings);
+                
+                themeCard.innerHTML = `
+                    <div class="theme-name">${theme.name}</div>
+                    ${preview}
+                `;
+
+                grid.appendChild(themeCard);
+            });
+        }
+
+        function createThemePreview(settings) {
+            return `
+                <div class="theme-preview" style="
+                    background-color: ${settings.cardBackground}; 
+                    border: ${settings.cardBorderWidth}px solid ${settings.cardBorderColor}; 
+                    border-radius: ${settings.cardBorderRadius}px;
+                    padding: ${settings.cardPadding};
+                    min-height: ${Math.max(48, settings.cardMinHeight * 0.7)}px;
+                    font-family: ${settings.fontFamily};
+                ">
+                    <div class="icon-area" style="
+                        color: ${settings.iconColor}; 
+                        background-color: ${settings.iconBackground}; 
+                        border-radius: ${settings.iconBackgroundRadius}px;
+                        padding: ${Math.max(8, settings.iconPadding * 0.7)}px;
+                    ">
+                        <div class="triangle-icon" style="
+                            border-left-width: ${Math.max(6, settings.iconSize * 0.3)}px;
+                            border-right-width: ${Math.max(6, settings.iconSize * 0.3)}px;
+                            border-bottom-width: ${Math.max(10, settings.iconSize * 0.5)}px;
+                        "></div>
+                    </div>
+                    <div class="name-area" style="
+                        color: ${settings.nameColor}; 
+                        font-size: ${Math.max(10, settings.nameFontSize * 0.8)}px; 
+                        font-weight: ${settings.nameFontWeight};
+                    ">Sample Card</div>
+                    <div class="state-area" style="
+                        color: ${settings.stateColor}; 
+                        font-size: ${Math.max(8, settings.stateFontSize * 0.8)}px;
+                    ">On</div>
+                </div>
+            `;
+        }
 
         function loadSectionStates() {
             const savedStates = localStorage.getItem('ha-button-card-editor-sections');
@@ -1230,13 +1601,14 @@ styles:
             document.getElementById('yamlOutput').textContent = yaml;
         }
 
-        function convertToCssProperty(camelCase) {
-            return camelCase.replace(/([A-Z])/g, '-$1').toLowerCase();
+        function convertToCssProperty(jsProperty) {
+            // Convert camelCase to kebab-case
+            return jsProperty.replace(/([A-Z])/g, '-$1').toLowerCase();
         }
 
         function copyYaml() {
             const yamlText = document.getElementById('yamlOutput').textContent;
-            navigator.clipboard.writeText(yamlText).then(function() {
+            navigator.clipboard.writeText(yamlText).then(() => {
                 const button = event.target;
                 const originalText = button.textContent;
                 button.textContent = 'Copied!';
@@ -1245,9 +1617,6 @@ styles:
                 setTimeout(() => {
                     button.textContent = originalText;
                     button.classList.remove('copied');
-                }, 1500);
+                }, 2000);
             });
         }
-    </script>
-</body>
-</html>
