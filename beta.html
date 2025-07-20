@@ -56,6 +56,13 @@
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title-text {
+            flex: 1;
         }
         
         .section {
@@ -362,15 +369,14 @@
         }
 
         .section-controls {
-            margin-bottom: 20px;
-            text-align: center;
+            display: flex;
+            gap: 12px;
         }
 
         .section-control-link {
             color: #3b82f6;
             text-decoration: none;
             font-size: 0.875rem;
-            margin: 0 12px;
             cursor: pointer;
             transition: color 0.2s;
         }
@@ -399,13 +405,13 @@
         <div class="layout-grid">
             <!-- Left Panel - WYSIWYG Editor -->
             <div class="panel">
-                <h2 class="panel-title">Card Settings</h2>
-                
-                <!-- Section Controls -->
-                <div class="section-controls">
-                    <span class="section-control-link" id="expandAllLink" onclick="expandAllSections()">Expand All</span>
-                    <span class="section-control-link" id="collapseAllLink" onclick="collapseAllSections()">Collapse All</span>
-                </div>
+                <h2 class="panel-title">
+                    <span class="panel-title-text">Card Settings</span>
+                    <div class="section-controls">
+                        <span class="section-control-link" id="expandAllLink" onclick="expandAllSections()">Expand All</span>
+                        <span class="section-control-link" id="collapseAllLink" onclick="collapseAllSections()">Collapse All</span>
+                    </div>
+                </h2>
                 
                 <!-- Card Section -->
                 <div class="section">
