@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Assistant Button Card Editor</title>
+    <title>Home Assistant Button Card Editor v0.0.2.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Fallback styles in case Tailwind doesn't load */
@@ -260,11 +260,111 @@
             flex-direction: column;
             gap: 24px;
         }
+
+        /* State-based styling CSS */
+        .state-condition {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .state-condition-header {
+            background: #f9fafb;
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            color: #374151;
+            transition: background-color 0.2s;
+        }
+
+        .state-condition-header:hover {
+            background: #f3f4f6;
+        }
+
+        .state-condition-content {
+            padding: 0 16px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+
+        .state-condition-content.open {
+            max-height: 2000px;
+            padding: 16px;
+        }
+
+        .add-state-button {
+            background: #10b981;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .add-state-button:hover {
+            background: #059669;
+        }
+
+        .delete-state-button {
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-right: 8px;
+        }
+
+        .delete-state-button:hover {
+            background: #dc2626;
+        }
+
+        .copy-styles-button {
+            background: #6366f1;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .copy-styles-button:hover {
+            background: #4f46e5;
+        }
+
+        .state-selector {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #e0f2fe;
+            border-radius: 8px;
+            border: 1px solid #0891b2;
+        }
+
+        .state-selector-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #0891b2;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="main-title">Home Assistant Button Card Editor</h1>
+        <h1 class="main-title">Home Assistant Button Card Editor v0.0.2.1</h1>
         
         <div class="layout-grid">
             <!-- Left Panel - WYSIWYG Editor -->
@@ -452,6 +552,18 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- State-Based Styles Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('stateStyles')">
+                        <span>State-Based Styles</span>
+                        <span class="arrow" id="stateStyles-arrow">▼</span>
+                    </div>
+                    <div class="section-content" id="stateStyles-content">
+                        <button class="add-state-button" onclick="addStateCondition()">+ Add State Condition</button>
+                        <div id="stateConditions"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Right Panel -->
@@ -459,6 +571,17 @@
                 <!-- Card Preview -->
                 <div class="panel">
                     <h2 class="panel-title">Preview</h2>
+                    
+                    <!-- State Selector -->
+                    <div class="state-selector">
+                        <div class="state-selector-label">Mock Entity State (for preview)</div>
+                        <select id="mockEntityState" class="form-input" onchange="updatePreview()">
+                            <option value="on">on</option>
+                            <option value="off">off</option>
+                            <option value="unavailable">unavailable</option>
+                        </select>
+                    </div>
+                    
                     <div class="preview-container">
                         <div id="cardPreview" class="card-preview">
                             <div class="icon-area">
@@ -485,6 +608,10 @@
     </div>
 
     <script>
+        // Global variables for state-based styling
+        let stateConditions = [];
+        let stateConditionCounter = 0;
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Add event listeners to all inputs
@@ -516,12 +643,243 @@
             }
         }
 
+        function toggleStateCondition(conditionId) {
+            const content = document.getElementById(`stateCondition-${conditionId}-content`);
+            const arrow = document.getElementById(`stateCondition-${conditionId}-arrow`);
+            
+            content.classList.toggle('open');
+            
+            if (content.classList.contains('open')) {
+                arrow.textContent = '▼';
+                arrow.classList.remove('rotated');
+            } else {
+                arrow.textContent = '▶';
+                arrow.classList.add('rotated');
+            }
+        }
+
+        function addStateCondition() {
+            const conditionId = stateConditionCounter++;
+            const condition = {
+                id: conditionId,
+                value: 'on',
+                styles: {}
+            };
+            
+            stateConditions.push(condition);
+            renderStateConditions();
+            updateYaml();
+        }
+
+        function deleteStateCondition(conditionId) {
+            stateConditions = stateConditions.filter(condition => condition.id !== conditionId);
+            renderStateConditions();
+            updatePreview();
+            updateYaml();
+        }
+
+        function copyBaseStyles(conditionId) {
+            const condition = stateConditions.find(c => c.id === conditionId);
+            if (!condition) return;
+
+            // Copy all current base styles
+            condition.styles = {
+                card: {
+                    backgroundColor: document.getElementById('cardBackground').value,
+                    borderColor: document.getElementById('cardBorderColor').value,
+                    borderWidth: document.getElementById('cardBorderWidth').value + 'px',
+                    borderRadius: document.getElementById('cardBorderRadius').value + 'px',
+                    padding: document.getElementById('cardPadding').value,
+                    minHeight: document.getElementById('cardMinHeight').value + 'px',
+                    fontFamily: document.getElementById('fontFamily').value,
+                    fontSize: document.getElementById('nameFontSize').value + 'px'
+                },
+                icon: {
+                    color: document.getElementById('iconColor').value,
+                    backgroundColor: document.getElementById('iconBackground').value,
+                    borderRadius: document.getElementById('iconBackgroundRadius').value + 'px',
+                    padding: document.getElementById('iconPadding').value + 'px',
+                    width: document.getElementById('iconSize').value + 'px'
+                },
+                name: {
+                    color: document.getElementById('nameColor').value,
+                    fontSize: document.getElementById('nameFontSize').value + 'px',
+                    fontWeight: document.getElementById('nameFontWeight').value
+                },
+                state: {
+                    color: document.getElementById('stateColor').value,
+                    fontSize: document.getElementById('stateFontSize').value + 'px'
+                }
+            };
+
+            renderStateConditions();
+            updatePreview();
+            updateYaml();
+        }
+
+        function renderStateConditions() {
+            const container = document.getElementById('stateConditions');
+            container.innerHTML = '';
+
+            stateConditions.forEach(condition => {
+                const conditionHtml = `
+                    <div class="state-condition">
+                        <div class="state-condition-header" onclick="toggleStateCondition(${condition.id})">
+                            <span>State: ${condition.value}</span>
+                            <div>
+                                <button class="delete-state-button" onclick="event.stopPropagation(); deleteStateCondition(${condition.id})">Delete</button>
+                                <span class="arrow" id="stateCondition-${condition.id}-arrow">▼</span>
+                            </div>
+                        </div>
+                        <div class="state-condition-content open" id="stateCondition-${condition.id}-content">
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label">State Value</label>
+                                <select oninput="updateStateValue(${condition.id}, this.value)" class="form-input">
+                                    <option value="on" ${condition.value === 'on' ? 'selected' : ''}>on</option>
+                                    <option value="off" ${condition.value === 'off' ? 'selected' : ''}>off</option>
+                                    <option value="unavailable" ${condition.value === 'unavailable' ? 'selected' : ''}>unavailable</option>
+                                </select>
+                            </div>
+                            
+                            <button class="copy-styles-button" onclick="copyBaseStyles(${condition.id})">Copy Current Base Styles</button>
+                            
+                            ${renderStateStyleSections(condition)}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += conditionHtml;
+            });
+        }
+
+        function renderStateStyleSections(condition) {
+            return `
+                <!-- Card Styles -->
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 8px; font-weight: 600;">Card Styles</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Background Color</label>
+                            <input type="color" value="${condition.styles.card?.backgroundColor || '#ffffff'}" 
+                                   oninput="updateStateStyle(${condition.id}, 'card', 'backgroundColor', this.value)" class="color-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Border Color</label>
+                            <input type="color" value="${condition.styles.card?.borderColor || '#e5e7eb'}" 
+                                   oninput="updateStateStyle(${condition.id}, 'card', 'borderColor', this.value)" class="color-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Icon Styles -->
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 8px; font-weight: 600;">Icon Styles</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Icon Color</label>
+                            <input type="color" value="${condition.styles.icon?.color || '#0891b2'}" 
+                                   oninput="updateStateStyle(${condition.id}, 'icon', 'color', this.value)" class="color-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Background Color</label>
+                            <input type="color" value="${condition.styles.icon?.backgroundColor || '#f8fafc'}" 
+                                   oninput="updateStateStyle(${condition.id}, 'icon', 'backgroundColor', this.value)" class="color-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Name Styles -->
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 8px; font-weight: 600;">Name Styles</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Name Color</label>
+                            <input type="color" value="${condition.styles.name?.color || '#64748b'}" 
+                                   oninput="updateStateStyle(${condition.id}, 'name', 'color', this.value)" class="color-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Font Weight</label>
+                            <select oninput="updateStateStyle(${condition.id}, 'name', 'fontWeight', this.value)" class="form-input">
+                                <option value="400" ${condition.styles.name?.fontWeight === '400' ? 'selected' : ''}>Normal</option>
+                                <option value="600" ${condition.styles.name?.fontWeight === '600' ? 'selected' : ''}>Semi Bold</option>
+                                <option value="700" ${condition.styles.name?.fontWeight === '700' ? 'selected' : ''}>Bold</option>
+                                <option value="800" ${condition.styles.name?.fontWeight === '800' ? 'selected' : ''}>Extra Bold</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- State Styles -->
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 8px; font-weight: 600;">State Styles</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">State Color</label>
+                            <input type="color" value="${condition.styles.state?.color || '#cbd5e1'}" 
+                                   oninput="updateStateStyle(${condition.id}, 'state', 'color', this.value)" class="color-input">
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateStateValue(conditionId, value) {
+            const condition = stateConditions.find(c => c.id === conditionId);
+            if (condition) {
+                condition.value = value;
+                renderStateConditions();
+                updatePreview();
+                updateYaml();
+            }
+        }
+
+        function updateStateStyle(conditionId, section, property, value) {
+            const condition = stateConditions.find(c => c.id === conditionId);
+            if (condition) {
+                if (!condition.styles[section]) {
+                    condition.styles[section] = {};
+                }
+                condition.styles[section][property] = value;
+                updatePreview();
+                updateYaml();
+            }
+        }
+
         function updatePreview() {
             const preview = document.getElementById('cardPreview');
             const iconArea = preview.querySelector('.icon-area');
             const nameArea = preview.querySelector('.name-area');
             const stateArea = preview.querySelector('.state-area');
+            const mockState = document.getElementById('mockEntityState').value;
 
+            // Find active state condition
+            const activeCondition = stateConditions.find(condition => condition.value === mockState);
+
+            // Apply base styles first
+            applyBaseStyles(preview, iconArea, nameArea, stateArea);
+
+            // Apply state-specific styles if condition exists
+            if (activeCondition && activeCondition.styles) {
+                applyStateStyles(preview, iconArea, nameArea, stateArea, activeCondition.styles);
+            }
+
+            // Update state display text
+            const stateDisplayMap = {
+                'on': 'On',
+                'off': 'Off',
+                'unavailable': 'Unavailable'
+            };
+            stateArea.textContent = stateDisplayMap[mockState] || mockState;
+
+            // Content
+            nameArea.textContent = document.getElementById('cardName').value;
+            
+            // Show/hide elements
+            iconArea.style.display = document.getElementById('showIcon').value === 'true' ? 'flex' : 'none';
+            nameArea.style.display = document.getElementById('showName').value === 'true' ? 'block' : 'none';
+            stateArea.style.display = document.getElementById('showState').value === 'true' ? 'block' : 'none';
+        }
+
+        function applyBaseStyles(preview, iconArea, nameArea, stateArea) {
             // Card styles
             preview.style.backgroundColor = document.getElementById('cardBackground').value;
             preview.style.borderColor = document.getElementById('cardBorderColor').value;
@@ -556,14 +914,46 @@
             
             stateArea.style.color = document.getElementById('stateColor').value;
             stateArea.style.fontSize = document.getElementById('stateFontSize').value + 'px';
+        }
 
-            // Content
-            nameArea.textContent = document.getElementById('cardName').value;
-            
-            // Show/hide elements
-            iconArea.style.display = document.getElementById('showIcon').value === 'true' ? 'flex' : 'none';
-            nameArea.style.display = document.getElementById('showName').value === 'true' ? 'block' : 'none';
-            stateArea.style.display = document.getElementById('showState').value === 'true' ? 'block' : 'none';
+        function applyStateStyles(preview, iconArea, nameArea, stateArea, styles) {
+            // Apply card styles
+            if (styles.card) {
+                if (styles.card.backgroundColor) preview.style.backgroundColor = styles.card.backgroundColor;
+                if (styles.card.borderColor) preview.style.borderColor = styles.card.borderColor;
+                if (styles.card.borderWidth) preview.style.borderWidth = styles.card.borderWidth;
+                if (styles.card.borderRadius) preview.style.borderRadius = styles.card.borderRadius;
+                if (styles.card.padding) preview.style.padding = styles.card.padding;
+                if (styles.card.minHeight) preview.style.minHeight = styles.card.minHeight;
+                if (styles.card.fontFamily) preview.style.fontFamily = styles.card.fontFamily;
+            }
+
+            // Apply icon styles
+            if (styles.icon) {
+                if (styles.icon.color) iconArea.style.color = styles.icon.color;
+                if (styles.icon.backgroundColor) iconArea.style.backgroundColor = styles.icon.backgroundColor;
+                if (styles.icon.borderRadius) iconArea.style.borderRadius = styles.icon.borderRadius;
+                if (styles.icon.padding) iconArea.style.padding = styles.icon.padding;
+                if (styles.icon.width) {
+                    const width = parseInt(styles.icon.width);
+                    const padding = parseInt(styles.icon.padding) || parseInt(document.getElementById('iconPadding').value);
+                    iconArea.style.width = (width + padding * 2) + 'px';
+                    iconArea.style.height = (width + padding * 2) + 'px';
+                }
+            }
+
+            // Apply name styles
+            if (styles.name) {
+                if (styles.name.color) nameArea.style.color = styles.name.color;
+                if (styles.name.fontSize) nameArea.style.fontSize = styles.name.fontSize;
+                if (styles.name.fontWeight) nameArea.style.fontWeight = styles.name.fontWeight;
+            }
+
+            // Apply state styles
+            if (styles.state) {
+                if (styles.state.color) stateArea.style.color = styles.state.color;
+                if (styles.state.fontSize) stateArea.style.fontSize = styles.state.fontSize;
+            }
         }
 
         function updateYaml() {
@@ -582,7 +972,7 @@
                 return `'${color}'`;
             }
             
-            const yaml = `type: custom:button-card
+            let yaml = `type: custom:button-card
 entity: ${document.getElementById('entity').value}
 layout: icon_state_name2nd
 show_name: ${document.getElementById('showName').value}
@@ -626,7 +1016,62 @@ styles:
     - align-self: center
     - margin-top: "-6px"`;
 
+            // Add state conditions if any exist
+            if (stateConditions.length > 0) {
+                yaml += '\nstate:';
+                stateConditions.forEach(condition => {
+                    yaml += `\n  - value: "${condition.value}"`;
+                    if (condition.styles && Object.keys(condition.styles).length > 0) {
+                        yaml += '\n    styles:';
+                        
+                        // Add card styles
+                        if (condition.styles.card && Object.keys(condition.styles.card).length > 0) {
+                            yaml += '\n      card:';
+                            Object.entries(condition.styles.card).forEach(([key, value]) => {
+                                const cssProperty = convertToCssProperty(key);
+                                const formattedValue = key.includes('Color') ? formatColor(value) : value;
+                                yaml += `\n        - ${cssProperty}: ${formattedValue}`;
+                            });
+                        }
+                        
+                        // Add icon styles
+                        if (condition.styles.icon && Object.keys(condition.styles.icon).length > 0) {
+                            yaml += '\n      icon:';
+                            Object.entries(condition.styles.icon).forEach(([key, value]) => {
+                                const cssProperty = convertToCssProperty(key);
+                                const formattedValue = key.includes('Color') ? formatColor(value) : value;
+                                yaml += `\n        - ${cssProperty}: ${formattedValue}`;
+                            });
+                        }
+                        
+                        // Add name styles
+                        if (condition.styles.name && Object.keys(condition.styles.name).length > 0) {
+                            yaml += '\n      name:';
+                            Object.entries(condition.styles.name).forEach(([key, value]) => {
+                                const cssProperty = convertToCssProperty(key);
+                                const formattedValue = key.includes('Color') ? formatColor(value) : value;
+                                yaml += `\n        - ${cssProperty}: ${formattedValue}`;
+                            });
+                        }
+                        
+                        // Add state styles
+                        if (condition.styles.state && Object.keys(condition.styles.state).length > 0) {
+                            yaml += '\n      state:';
+                            Object.entries(condition.styles.state).forEach(([key, value]) => {
+                                const cssProperty = convertToCssProperty(key);
+                                const formattedValue = key.includes('Color') ? formatColor(value) : value;
+                                yaml += `\n        - ${cssProperty}: ${formattedValue}`;
+                            });
+                        }
+                    }
+                });
+            }
+
             document.getElementById('yamlOutput').textContent = yaml;
+        }
+
+        function convertToCssProperty(camelCase) {
+            return camelCase.replace(/([A-Z])/g, '-$1').toLowerCase();
         }
 
         function copyYaml() {
