@@ -627,16 +627,6 @@
                 <div class="panel">
                     <h2 class="panel-title">Preview</h2>
                     
-                    <!-- State Selector -->
-                    <div class="state-selector">
-                        <div class="state-selector-label">Mock Entity State (for preview)</div>
-                        <select id="mockEntityState" class="form-input" onchange="updatePreview()">
-                            <option value="on">on</option>
-                            <option value="off">off</option>
-                            <option value="unavailable">unavailable</option>
-                        </select>
-                    </div>
-                    
                     <div class="preview-container">
                         <div id="cardPreview" class="card-preview">
                             <div class="icon-area">
@@ -646,6 +636,16 @@
                             <div class="state-area">5</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- State Selector -->
+                <div class="state-selector">
+                    <div class="state-selector-label">Mock Entity State (for preview)</div>
+                    <select id="mockEntityState" class="form-input" onchange="updatePreview()">
+                        <option value="on">on</option>
+                        <option value="off">off</option>
+                        <option value="unavailable">unavailable</option>
+                    </select>
                 </div>
 
                 <!-- YAML Output -->
