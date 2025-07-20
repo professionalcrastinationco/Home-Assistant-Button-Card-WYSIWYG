@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Assistant Button Card Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Fallback styles in case Tailwind doesn't load */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .main-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+        
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 24px;
+        }
+        
+        .section {
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: #f3f4f6;
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            color: #374151;
+            transition: background-color 0.2s;
+        }
+        
+        .section-header:hover {
+            background: #e5e7eb;
+        }
+        
+        .section-content {
+            padding: 0 16px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+        
+        .section-content.open {
+            max-height: 1000px;
+            padding: 16px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .color-input {
+            height: 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .preview-container {
+            background: #f3f4f6;
+            padding: 32px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 120px;
+        }
+        
+        .card-preview {
+            display: grid;
+            grid-template-areas: 'i n' 'i s';
+            grid-template-rows: 1fr 1fr;
+            grid-template-columns: auto 1fr;
+            gap: 0 10px;
+            font-family: 'Roboto Condensed', sans-serif;
+            background-color: #ffffff;
+            padding: 0 0 0 6px;
+            border: 1px solid #e5e7eb;
+            border-radius: 100px;
+            min-height: 64px;
+            align-items: center;
+            width: 100%;
+            min-width: 200px;
+            max-width: 400px;
+            transition: all 0.3s ease;
+        }
+        
+        .icon-area {
+            grid-area: i;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            color: #0891b2;
+            background-color: #f8fafc;
+            border-radius: 50px;
+            padding: 12px;
+        }
+        
+        .name-area {
+            grid-area: n;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 800;
+            justify-self: start;
+            align-self: center;
+            margin-bottom: -6px;
+        }
+        
+        .state-area {
+            grid-area: s;
+            color: #cbd5e1;
+            font-size: 12px;
+            justify-self: start;
+            align-self: center;
+            margin-top: -6px;
+        }
+        
+        .triangle-icon {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 17px solid currentColor;
+            display: inline-block;
+        }
+        
+        .yaml-container {
+            background: #1f2937;
+            color: #10b981;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            overflow: auto;
+            max-height: 400px;
+        }
+        
+        .copy-button {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .copy-button:hover {
+            background: #2563eb;
+        }
+        
+        .copy-button.copied {
+            background: #10b981;
+        }
+        
+        .yaml-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .arrow {
+            transition: transform 0.2s;
+        }
+        
+        .arrow.rotated {
+            transform: rotate(-90deg);
+        }
+        
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">Home Assistant Button Card Editor</h1>
+        
+        <div class="layout-grid">
+            <!-- Left Panel - WYSIWYG Editor -->
+            <div class="panel">
+                <h2 class="panel-title">Card Settings</h2>
+                
+                <!-- Card Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('card')">
+                        <span>Card</span>
+                        <span class="arrow" id="card-arrow">▼</span>
+                    </div>
+                    <div class="section-content open" id="card-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Background Color</label>
+                                <input type="color" id="cardBackground" value="#ffffff" class="color-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Border Color</label>
+                                <input type="color" id="cardBorderColor" value="#e5e7eb" class="color-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Border Width</label>
+                                <input type="number" id="cardBorderWidth" value="1" min="0" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Border Radius</label>
+                                <input type="number" id="cardBorderRadius" value="100" min="0" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Padding</label>
+                                <input type="text" id="cardPadding" value="0 0 0 6px" placeholder="top right bottom left" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Min Height (px)</label>
+                                <input type="number" id="cardMinHeight" value="64" min="0" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Icon Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('icon')">
+                        <span>Icon</span>
+                        <span class="arrow" id="icon-arrow">▼</span>
+                    </div>
+                    <div class="section-content open" id="icon-content">
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label class="form-label">Icon Name</label>
+                                <input type="text" id="iconName" value="mdi:lightbulb-on" placeholder="mdi:icon-name" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon Color</label>
+                                <input type="color" id="iconColor" value="#0891b2" class="color-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon Size (px)</label>
+                                <input type="number" id="iconSize" value="28" min="0" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Background Color</label>
+                                <input type="color" id="iconBackground" value="#f8fafc" class="color-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Background Radius (px)</label>
+                                <input type="number" id="iconBackgroundRadius" value="50" min="0" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Padding (px)</label>
+                                <input type="number" id="iconPadding" value="12" min="0" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typography Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('typography')">
+                        <span>Typography</span>
+                        <span class="arrow" id="typography-arrow">▼</span>
+                    </div>
+                    <div class="section-content open" id="typography-content">
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label class="form-label">Font Family</label>
+                                <input type="text" id="fontFamily" value="Roboto Condensed" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Name Font Size (px)</label>
+                                <input type="number" id="nameFontSize" value="14" min="0" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Name Font Weight</label>
+                                <select id="nameFontWeight" class="form-input">
+                                    <option value="400">Normal</option>
+                                    <option value="600">Semi Bold</option>
+                                    <option value="700">Bold</option>
+                                    <option value="800" selected>Extra Bold</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Name Color</label>
+                                <input type="color" id="nameColor" value="#64748b" class="color-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">State Font Size (px)</label>
+                                <input type="number" id="stateFontSize" value="12" min="0" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">State Color</label>
+                                <input type="color" id="stateColor" value="#cbd5e1" class="color-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layout Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('layout')">
+                        <span>Layout</span>
+                        <span class="arrow" id="layout-arrow">▼</span>
+                    </div>
+                    <div class="section-content open" id="layout-content">
+                        <div class="form-grid" style="grid-template-columns: 1fr;">
+                            <div class="form-group">
+                                <label class="form-label">Grid Template Areas</label>
+                                <input type="text" id="gridAreas" value="i n, i s" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Grid Template Rows</label>
+                                <input type="text" id="gridRows" value="1fr 1fr" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Grid Template Columns</label>
+                                <input type="text" id="gridColumns" value="auto 1fr" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gap</label>
+                                <input type="text" id="gridGap" value="0 10px" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('content')">
+                        <span>Content</span>
+                        <span class="arrow" id="content-arrow">▼</span>
+                    </div>
+                    <div class="section-content open" id="content-content">
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label class="form-label">Entity</label>
+                                <input type="text" id="entity" value="sensor.helper_count_lights_on_interior" class="form-input">
+                            </div>
+                            <div class="form-group form-grid-full">
+                                <label class="form-label">Name</label>
+                                <input type="text" id="cardName" value="Lights On (Inside)" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show Name</label>
+                                <select id="showName" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show Icon</label>
+                                <select id="showIcon" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Show State</label>
+                                <select id="showState" class="form-input">
+                                    <option value="true" selected>True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Card Preview -->
+                <div class="panel">
+                    <h2 class="panel-title">Preview</h2>
+                    <div class="preview-container">
+                        <div id="cardPreview" class="card-preview">
+                            <div class="icon-area">
+                                <div class="triangle-icon"></div>
+                            </div>
+                            <div class="name-area">Lights On (Inside)</div>
+                            <div class="state-area">5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YAML Output -->
+                <div class="panel">
+                    <div class="yaml-header">
+                        <h2 class="panel-title" style="margin-bottom: 0;">YAML Code</h2>
+                        <button onclick="copyYaml()" class="copy-button">Copy to Clipboard</button>
+                    </div>
+                    <div class="yaml-container">
+                        <pre id="yamlOutput"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all inputs
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    updatePreview();
+                    updateYaml();
+                });
+            });
+            
+            // Initialize display
+            updatePreview();
+            updateYaml();
+        });
+
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + '-content');
+            const arrow = document.getElementById(sectionId + '-arrow');
+            
+            content.classList.toggle('open');
+            
+            if (content.classList.contains('open')) {
+                arrow.textContent = '▼';
+                arrow.classList.remove('rotated');
+            } else {
+                arrow.textContent = '▶';
+                arrow.classList.add('rotated');
+            }
+        }
+
+        function updatePreview() {
+            const preview = document.getElementById('cardPreview');
+            const iconArea = preview.querySelector('.icon-area');
+            const nameArea = preview.querySelector('.name-area');
+            const stateArea = preview.querySelector('.state-area');
+
+            // Card styles
+            preview.style.backgroundColor = document.getElementById('cardBackground').value;
+            preview.style.borderColor = document.getElementById('cardBorderColor').value;
+            preview.style.borderWidth = document.getElementById('cardBorderWidth').value + 'px';
+            preview.style.borderRadius = document.getElementById('cardBorderRadius').value + 'px';
+            preview.style.padding = document.getElementById('cardPadding').value;
+            preview.style.minHeight = document.getElementById('cardMinHeight').value + 'px';
+
+            // Grid layout
+            preview.style.gridTemplateAreas = document.getElementById('gridAreas').value;
+            preview.style.gridTemplateRows = document.getElementById('gridRows').value;
+            preview.style.gridTemplateColumns = document.getElementById('gridColumns').value;
+            preview.style.gap = document.getElementById('gridGap').value;
+
+            // Icon styles
+            iconArea.style.color = document.getElementById('iconColor').value;
+            iconArea.style.backgroundColor = document.getElementById('iconBackground').value;
+            iconArea.style.borderRadius = document.getElementById('iconBackgroundRadius').value + 'px';
+            iconArea.style.padding = document.getElementById('iconPadding').value + 'px';
+            
+            const iconSize = document.getElementById('iconSize').value;
+            iconArea.style.width = (parseInt(iconSize) + parseInt(document.getElementById('iconPadding').value) * 2) + 'px';
+            iconArea.style.height = (parseInt(iconSize) + parseInt(document.getElementById('iconPadding').value) * 2) + 'px';
+
+            // Typography
+            const fontFamily = document.getElementById('fontFamily').value;
+            preview.style.fontFamily = fontFamily;
+            
+            nameArea.style.color = document.getElementById('nameColor').value;
+            nameArea.style.fontSize = document.getElementById('nameFontSize').value + 'px';
+            nameArea.style.fontWeight = document.getElementById('nameFontWeight').value;
+            
+            stateArea.style.color = document.getElementById('stateColor').value;
+            stateArea.style.fontSize = document.getElementById('stateFontSize').value + 'px';
+
+            // Content
+            nameArea.textContent = document.getElementById('cardName').value;
+            
+            // Show/hide elements
+            iconArea.style.display = document.getElementById('showIcon').value === 'true' ? 'flex' : 'none';
+            nameArea.style.display = document.getElementById('showName').value === 'true' ? 'block' : 'none';
+            stateArea.style.display = document.getElementById('showState').value === 'true' ? 'block' : 'none';
+        }
+
+        function updateYaml() {
+            // Get the grid areas value and convert it to Home Assistant format
+            let gridAreas = document.getElementById('gridAreas').value.trim();
+            
+            // Convert simple format "i n, i s" to Home Assistant format "\"i n\" \"i s\""
+            if (gridAreas && !gridAreas.includes('\\"')) {
+                // Split by comma and wrap each part in escaped quotes
+                const areas = gridAreas.split(',').map(area => `\\"${area.trim()}\\"`).join(' ');
+                gridAreas = `"${areas}"`;
+            }
+            
+            // Function to format hex colors with single quotes
+            function formatColor(color) {
+                return `'${color}'`;
+            }
+            
+            const yaml = `type: custom:button-card
+entity: ${document.getElementById('entity').value}
+layout: icon_state_name2nd
+show_name: ${document.getElementById('showName').value}
+show_icon: ${document.getElementById('showIcon').value}
+icon: ${document.getElementById('iconName').value}
+show_state: ${document.getElementById('showState').value}
+name: ${document.getElementById('cardName').value}
+styles:
+  grid:
+    - grid-template-areas: ${gridAreas}
+    - grid-template-rows: ${document.getElementById('gridRows').value}
+    - grid-template-columns: ${document.getElementById('gridColumns').value}
+    - gap: ${document.getElementById('gridGap').value}
+  card:
+    - font-family: ${document.getElementById('fontFamily').value}
+    - font-size: ${document.getElementById('nameFontSize').value}px
+    - background-color: ${formatColor(document.getElementById('cardBackground').value)}
+    - padding: ${document.getElementById('cardPadding').value}
+    - border: ${document.getElementById('cardBorderWidth').value}px solid ${formatColor(document.getElementById('cardBorderColor').value)}
+    - border-radius: ${document.getElementById('cardBorderRadius').value}px !important
+    - box-shadow: none
+    - min-height: ${document.getElementById('cardMinHeight').value}px !important
+  icon:
+    - width: ${document.getElementById('iconSize').value}px
+    - height: auto
+    - color: ${formatColor(document.getElementById('iconColor').value)}
+    - background-color: ${formatColor(document.getElementById('iconBackground').value)}
+    - border-radius: ${document.getElementById('iconBackgroundRadius').value}px
+    - padding: ${document.getElementById('iconPadding').value}px
+  name:
+    - color: ${formatColor(document.getElementById('nameColor').value)}
+    - font-size: ${document.getElementById('nameFontSize').value}px
+    - font-weight: ${document.getElementById('nameFontWeight').value}
+    - justify-self: start
+    - align-self: center
+    - margin-bottom: "-6px"
+  state:
+    - color: ${formatColor(document.getElementById('stateColor').value)}
+    - font-size: ${document.getElementById('stateFontSize').value}px
+    - justify-self: start
+    - align-self: center
+    - margin-top: "-6px"`;
+
+            document.getElementById('yamlOutput').textContent = yaml;
+        }
+
+        function copyYaml() {
+            const yamlText = document.getElementById('yamlOutput').textContent;
+            navigator.clipboard.writeText(yamlText).then(function() {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 1500);
+            });
+        }
+    </script>
+</body>
+</html>
