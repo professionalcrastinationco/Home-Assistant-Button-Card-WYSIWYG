@@ -946,6 +946,7 @@
             }
         };
 
+
         // Themes Modal Functions - Declared globally
         function openThemesModal() {
             var modal = document.getElementById('themesModal');
@@ -1059,6 +1060,42 @@
                     ">On</div>
                 </div>
             `;
+        }
+
+        function openThemesModal() {
+            const modal = document.getElementById('themesModal');
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeThemesModal(event) {
+            if (event && event.target !== event.currentTarget && !event.currentTarget.contains(event.target)) {
+                return;
+            }
+            
+            const modal = document.getElementById('themesModal');
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function applyTheme(themeKey) {
+            const theme = themes[themeKey];
+            const settings = theme.settings;
+
+            // Apply theme settings to form inputs (preserving content settings)
+            Object.keys(settings).forEach(settingKey => {
+                const element = document.getElementById(settingKey);
+                if (element) {
+                    element.value = settings[settingKey];
+                }
+            });
+
+            // Update preview and YAML
+            updatePreview();
+            updateYaml();
+
+            // Close modal
+            closeThemesModal();
         }
 
         function loadSectionStates() {
@@ -1577,46 +1614,4 @@ styles:
                         
                         // Add name styles
                         if (condition.styles.name && Object.keys(condition.styles.name).length > 0) {
-                            yaml += '\n      name:';
-                            Object.entries(condition.styles.name).forEach(([key, value]) => {
-                                const cssProperty = convertToCssProperty(key);
-                                const formattedValue = key.includes('Color') ? formatColor(value) : value;
-                                yaml += `\n        - ${cssProperty}: ${formattedValue}`;
-                            });
-                        }
-                        
-                        // Add state styles
-                        if (condition.styles.state && Object.keys(condition.styles.state).length > 0) {
-                            yaml += '\n      state:';
-                            Object.entries(condition.styles.state).forEach(([key, value]) => {
-                                const cssProperty = convertToCssProperty(key);
-                                const formattedValue = key.includes('Color') ? formatColor(value) : value;
-                                yaml += `\n        - ${cssProperty}: ${formattedValue}`;
-                            });
-                        }
-                    }
-                });
-            }
-
-            document.getElementById('yamlOutput').textContent = yaml;
-        }
-
-        function convertToCssProperty(jsProperty) {
-            // Convert camelCase to kebab-case
-            return jsProperty.replace(/([A-Z])/g, '-$1').toLowerCase();
-        }
-
-        function copyYaml() {
-            const yamlText = document.getElementById('yamlOutput').textContent;
-            navigator.clipboard.writeText(yamlText).then(() => {
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = 'Copied!';
-                button.classList.add('copied');
-                
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.classList.remove('copied');
-                }, 2000);
-            });
-        }
+                            yaml += '\n      name:
