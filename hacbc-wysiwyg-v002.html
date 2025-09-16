@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Button Card Studio - DaisyUI Edition</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
+    <style>
+        @keyframes iconGlow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+        .icon-glow {
+            animation: iconGlow 2s ease-in-out infinite;
+        }
+        .ha-card-preview {
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-base-300">
+    <!-- Header Navbar -->
+    <div class="navbar navbar-compact bg-base-200 border-b border-base-content/10 min-h-0 py-2">
+        <div class="flex-1">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                    <i class="mdi mdi-card-bulleted-outline text-primary-content text-lg"></i>
+                </div>
+                <h1 class="text-xl font-bold">Button Card Studio</h1>
+            </div>
+        </div>
+        <div class="flex-none">
+            <span class="text-xs text-base-content/60">Home Assistant Custom Button Card Editor</span>
+        </div>
+    </div>
+
+    <div class="flex h-[calc(100vh-48px)]">
+        <!-- Left Panel - Configuration -->
+        <div class="w-1/2 p-2 overflow-y-auto bg-base-200">
+            <!-- Toggle Switches Card -->
+            <div class="card bg-base-100 shadow-xl mb-1.5">
+                <div class="card-body p-2">
+                    <h2 class="text-sm font-semibold flex items-center gap-1">
+                        <i class="mdi mdi-toggle-switch-outline text-primary text-base"></i>
+                        Display Options
+                    </h2>
+                    <div class="grid grid-cols-4 gap-1 mt-1">
+                        <div class="form-control">
+                            <label class="label cursor-pointer p-0 flex-col">
+                                <span class="label-text text-xs">Name</span>
+                                <input type="checkbox" class="toggle toggle-xs toggle-primary mt-1" id="showName" checked />
+                            </label>
+                        </div>
+                        <div class="form-control">
+                            <label class="label cursor-pointer p-0 flex-col">
+                                <span class="label-text text-xs">Icon</span>
+                                <input type="checkbox" class="toggle toggle-xs toggle-primary mt-1" id="showIcon" checked />
+                            </label>
+                        </div>
+                        <div class="form-control">
+                            <label class="label cursor-pointer p-0 flex-col">
+                                <span class="label-text text-xs">State</span>
+                                <input type="checkbox" class="toggle toggle-xs toggle-primary mt-1" id="showState" />
+                            </label>
+                        </div>
+                        <div class="form-control">
+                            <label class="label cursor-pointer p-0 flex-col">
+                                <span class="label-text text-xs">Label</span>
+                                <input type="checkbox" class="toggle toggle-xs toggle-primary mt-1" id="showLabel" checked />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Settings Card -->
+            <div class="card bg-base-100 shadow-xl mb-1.5">
+                <div class="card-body p-2">
+                    <h2 class="text-sm font-semibold flex items-center gap-1">
+                        <i class="mdi mdi-pencil-outline text-secondary text-base"></i>
+                        Content Settings
+                    </h2>
+                    <div class="space-y-1.5 mt-1">
+                        <div class="form-control">
+                            <label class="label py-0.5">
+                                <span class="label-text text-xs">Entity</span>
+                            </label>
+                            <input type="text" placeholder="light.living_room" class="input input-bordered input-primary input-sm" id="entity" value="light.living_room" />
+                        </div>
+                        <div class="form-control relative">
+                            <label class="label py-0.5">
+                                <span class="label-text text-xs">Icon</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" placeholder="Search icons..." class="input input-bordered input-primary input-sm pr-10" id="icon" value="lightbulb" />
+                                <i id="iconPreviewSmall" class="mdi mdi-lightbulb absolute right-3 top-2 text-primary text-sm"></i>
+                            </div>
+                            <div id="iconDropdown" class="absolute z-50 w-full mt-1 bg-base-100 border border-base-300 rounded-lg shadow-xl hidden max-h-64 overflow-y-auto">
+                                <!-- Icon results will appear here -->
+                            </div>
+                        </div>
+                        <div class="form-control">
+                            <label class="label py-0.5">
+                                <span class="label-text text-xs">Name</span>
+                            </label>
+                            <input type="text" placeholder="Button name" class="input input-bordered input-primary input-sm" id="name" value="Overhead" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label py-0.5">
+                                <span class="label-text text-xs">Label</span>
+                            </label>
+                            <input type="text" placeholder="Optional label" class="input input-bordered input-primary input-sm" id="label" value="Lights" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Styling Card -->
+            <div class="card bg-base-100 shadow-xl mb-1.5">
+                <div class="card-body p-2">
+                    <h2 class="text-sm font-semibold flex items-center gap-1">
+                        <i class="mdi mdi-palette-outline text-accent text-base"></i>
+                        Visual Styling
+                    </h2>
+                    <div class="space-y-1.5 mt-1">
+                        <div class="form-control">
+                            <label class="label py-0.5">
+                                <span class="label-text text-xs">Background Color</span>
+                            </label>
+                            <div class="join">
+                                <input type="text" class="input input-bordered input-sm join-item flex-1" id="bgColor" value="rgba(30,41,59,0.5)" readonly />
+                                <button class="btn btn-sm btn-primary join-item" onclick="openColorPicker('bgColor')">
+                                    <i class="mdi mdi-palette text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="form-control">
+                                <label class="label py-0.5">
+                                    <span class="label-text text-xs">Border Radius</span>
+                                </label>
+                                <input type="text" class="input input-bordered input-sm" id="borderRadius" value="18px" />
+                            </div>
+                            <div class="form-control">
+                                <label class="label py-0.5">
+                                    <span class="label-text text-xs">Height</span>
+                                </label>
+                                <input type="text" class="input input-bordered input-sm" id="cardHeight" value="120px" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Icon Colors Card -->
+            <div class="card bg-base-100 shadow-xl mb-1.5">
+                <div class="card-body p-2">
+                    <h2 class="text-sm font-semibold flex items-center gap-1">
+                        <i class="mdi mdi-brush-outline text-warning text-base"></i>
+                        Icon Colors
+                    </h2>
+                    <div class="grid grid-cols-2 gap-1 mt-1">
+                        <div class="form-control">
+                            <label class="label py-0.5">
+                                <span class="label-text text-xs">Off State</span>
+                            </label>
+                            <div class="join">
+                                <input type="text" class="input input-bordered input-sm join-item flex-1" id="iconColor" value="#64748b" readonly />
+                                <button class="btn btn-sm btn-primary join-item" onclick="openColorPicker('iconColor')">
+                                    <i class="mdi mdi-palette text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-control">
+                            <label class="label py-0.5">
+                                <span class="label-text text-xs">On State</span>
+                            </label>
+                            <div class="join">
+                                <input type="text" class="input input-bordered input-sm join-item flex-1" id="iconColorOn" value="#fbbf24" readonly />
+                                <button class="btn btn-sm btn-primary join-item" onclick="openColorPicker('iconColorOn')">
+                                    <i class="mdi mdi-palette text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="w-1/2 flex flex-col bg-base-300">
+            <!-- Preview Section -->
+            <div class="h-1/2 p-3 flex items-center justify-center border-b border-base-content/10">
+                <div class="w-full max-w-md">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-semibold flex items-center">
+                            <i class="mdi mdi-eye-outline mr-1 text-info text-lg"></i>
+                            Live Preview
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-base-content/60">State</span>
+                            <input type="checkbox" class="toggle toggle-success toggle-sm" id="stateToggle" />
+                        </div>
+                    </div>
+                    <div class="flex justify-center">
+                        <div id="cardPreview" class="ha-card-preview relative overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                             style="background-color: rgba(30,41,59,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 18px; height: 120px; width: 120px; padding: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                            <div class="flex flex-col items-center justify-center h-full">
+                                <div id="iconPreview" class="mb-2 transition-all duration-300">
+                                    <i class="mdi mdi-lightbulb text-4xl" style="color: #64748b;"></i>
+                                </div>
+                                <div id="namePreview" class="text-center transition-all duration-300" style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Overhead</div>
+                                <div id="labelPreview" class="text-center mt-1 transition-all duration-300" style="color: #64748b; font-size: 0.7rem;">Lights</div>
+                                <div id="statePreview" class="text-center mt-1 transition-all duration-300 hidden" style="color: #64748b; font-size: 0.7rem;">off</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- YAML Output Section -->
+            <div class="h-1/2 p-3 bg-base-100 overflow-y-auto">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-base font-semibold flex items-center">
+                        <i class="mdi mdi-code-braces mr-1 text-warning text-lg"></i>
+                        YAML Output
+                    </h3>
+                    <button onclick="copyYAML()" class="btn btn-primary btn-xs">
+                        <i class="mdi mdi-content-copy mr-1 text-sm"></i>
+                        Copy
+                    </button>
+                </div>
+                <div class="mockup-code">
+                    <pre id="yamlOutput"><code class="text-success"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DaisyUI Color Picker Modal -->
+    <dialog id="colorPickerModal" class="modal">
+        <div class="modal-box w-11/12 max-w-2xl p-4">
+            <h3 class="font-bold text-base mb-3">Choose a Color</h3>
+            <div id="colorGrid" class="space-y-3">
+                <!-- Colors will be populated here -->
+            </div>
+            <div class="modal-action">
+                <form method="dialog">
+                    <button class="btn">Close</button>
+                </form>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <script>
+        // DaisyUI semantic colors with their hex values
+        const daisyUIColors = {
+            primary: ['#661AE6', '#7B2FF7', '#8B47F7', '#9B5FF7', '#AB77F7'],
+            secondary: ['#D926AA', '#E13EBB', '#E856CC', '#EE6EDD', '#F386EE'],
+            accent: ['#1FB2A5', '#37C7BA', '#4FDACF', '#67EDE4', '#7FFFF9'],
+            neutral: ['#2a323c', '#3d4451', '#4a5568', '#5a6578', '#6a7588'],
+            base: ['#1f2937', '#374151', '#4b5563', '#6b7280', '#9ca3af'],
+            info: ['#0891b2', '#06b6d4', '#0ea5e9', '#38bdf8', '#7dd3fc'],
+            success: ['#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac'],
+            warning: ['#a16207', '#ca8a04', '#eab308', '#facc15', '#fde047'],
+            error: ['#b91c1c', '#dc2626', '#ef4444', '#f87171', '#fca5a5']
+        };
+
+        // Common MDI icons for home automation
+        const mdiIcons = [
+            'lightbulb', 'lightbulb-outline', 'light-recessed', 'lamp', 'floor-lamp', 'lava-lamp', 'led-strip', 'string-lights',
+            'fan', 'ceiling-fan', 'air-conditioner', 'air-purifier', 'thermostat', 'thermometer',
+            'door', 'door-open', 'door-closed', 'gate', 'garage', 'garage-open', 'garage-variant',
+            'window-shutter', 'window-shutter-open', 'blinds', 'blinds-open', 'curtains', 'curtains-closed',
+            'lock', 'lock-open', 'lock-smart', 'shield-lock', 'security', 'shield-home',
+            'motion-sensor', 'smoke-detector', 'water', 'water-alert', 'leak', 'pipe-leak',
+            'camera', 'cctv', 'webcam', 'doorbell-video', 'video',
+            'speaker', 'television', 'radio', 'cast', 'spotify', 'netflix', 'youtube-tv',
+            'power', 'power-plug', 'power-socket-eu', 'power-socket-us', 'power-socket-uk',
+            'weather-cloudy', 'weather-sunny', 'weather-rainy', 'weather-snowy', 'weather-partly-cloudy',
+            'home', 'home-outline', 'home-automation', 'sofa', 'bed', 'kitchen', 'toilet', 'shower',
+            'wifi', 'router-wireless', 'access-point', 'bluetooth', 'zigbee',
+            'washing-machine', 'dishwasher', 'stove', 'oven', 'microwave', 'fridge', 'coffee-maker',
+            'alarm', 'alarm-bell', 'bell', 'bell-ring', 'fire', 'fire-alert',
+            'flower', 'tree', 'sprinkler', 'watering-can', 'grass',
+            'car', 'car-electric', 'ev-station', 'battery-charging', 'solar-panel'
+        ];
+
+        let currentColorTarget = null;
+
+        // Helper function to convert hex to rgba
+        function hexToRgba(hex, alpha = 1) {
+            // Remove # if present
+            hex = hex.replace('#', '');
+
+            // Parse hex values
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Get all input elements
+        const inputs = {
+            showName: document.getElementById('showName'),
+            showIcon: document.getElementById('showIcon'),
+            showState: document.getElementById('showState'),
+            showLabel: document.getElementById('showLabel'),
+            entity: document.getElementById('entity'),
+            icon: document.getElementById('icon'),
+            name: document.getElementById('name'),
+            label: document.getElementById('label'),
+            bgColor: document.getElementById('bgColor'),
+            borderRadius: document.getElementById('borderRadius'),
+            cardHeight: document.getElementById('cardHeight'),
+            iconColor: document.getElementById('iconColor'),
+            iconColorOn: document.getElementById('iconColorOn'),
+            stateToggle: document.getElementById('stateToggle')
+        };
+
+        // Preview elements
+        const preview = {
+            card: document.getElementById('cardPreview'),
+            icon: document.getElementById('iconPreview').querySelector('i'),
+            name: document.getElementById('namePreview'),
+            label: document.getElementById('labelPreview'),
+            state: document.getElementById('statePreview')
+        };
+
+        // Icon search functionality
+        const iconInput = document.getElementById('icon');
+        const iconDropdown = document.getElementById('iconDropdown');
+        const iconPreviewSmall = document.getElementById('iconPreviewSmall');
+
+        iconInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length > 0) {
+                const filteredIcons = mdiIcons.filter(icon =>
+                    icon.toLowerCase().includes(searchTerm)
+                ).slice(0, 10);
+                displayIconResults(filteredIcons);
+            } else {
+                iconDropdown.classList.add('hidden');
+            }
+        });
+
+        iconInput.addEventListener('focus', () => {
+            if (iconInput.value.length > 0) {
+                const searchTerm = iconInput.value.toLowerCase();
+                const filteredIcons = mdiIcons.filter(icon =>
+                    icon.toLowerCase().includes(searchTerm)
+                ).slice(0, 10);
+                displayIconResults(filteredIcons);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!iconInput.contains(e.target) && !iconDropdown.contains(e.target)) {
+                iconDropdown.classList.add('hidden');
+            }
+        });
+
+        function displayIconResults(icons) {
+            if (icons.length === 0) {
+                iconDropdown.classList.add('hidden');
+                return;
+            }
+
+            iconDropdown.innerHTML = icons.map(icon => `
+                <div class="flex items-center px-4 py-3 hover:bg-base-200 cursor-pointer transition-colors"
+                     onclick="selectIcon('${icon}')">
+                    <i class="mdi mdi-${icon} text-xl mr-3 text-primary"></i>
+                    <span class="text-sm">${icon}</span>
+                </div>
+            `).join('');
+            iconDropdown.classList.remove('hidden');
+        }
+
+        function selectIcon(iconName) {
+            iconInput.value = iconName;
+            iconPreviewSmall.className = `mdi mdi-${iconName} absolute right-3 top-2 text-primary text-sm`;
+            iconDropdown.classList.add('hidden');
+            updatePreview();
+        }
+
+        // Color picker functionality
+        function openColorPicker(target) {
+            currentColorTarget = target;
+            const modal = document.getElementById('colorPickerModal');
+            const grid = document.getElementById('colorGrid');
+
+            grid.innerHTML = Object.entries(daisyUIColors).map(([name, shades]) => `
+                <div>
+                    <h4 class="text-xs font-medium mb-1 capitalize">${name}</h4>
+                    <div class="grid grid-cols-5 gap-1">
+                        ${shades.map((color, index) => `
+                            <button onclick="selectColor('${color}')"
+                                    class="w-12 h-12 rounded-lg border-2 border-base-300 hover:scale-110 transition-transform"
+                                    style="background-color: ${color};"
+                                    title="${name}-${(index + 1) * 100}">
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Add custom colors section
+            grid.innerHTML += `
+                <div>
+                    <h4 class="text-xs font-medium mb-1">Custom Colors</h4>
+                    <div class="grid grid-cols-5 gap-1">
+                        <button onclick="selectColor('rgba(30,41,59,0.5)')"
+                                class="w-12 h-12 rounded-lg border-2 border-base-300 hover:scale-110 transition-transform"
+                                style="background-color: rgba(30,41,59,0.5);"
+                                title="Transparent Dark">
+                        </button>
+                        <button onclick="selectColor('#64748b')"
+                                class="w-12 h-12 rounded-lg border-2 border-base-300 hover:scale-110 transition-transform"
+                                style="background-color: #64748b;"
+                                title="Slate">
+                        </button>
+                        <button onclick="selectColor('#fbbf24')"
+                                class="w-12 h-12 rounded-lg border-2 border-base-300 hover:scale-110 transition-transform"
+                                style="background-color: #fbbf24;"
+                                title="Amber">
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            modal.showModal();
+        }
+
+        function selectColor(color) {
+            if (currentColorTarget) {
+                document.getElementById(currentColorTarget).value = color;
+                updatePreview();
+            }
+            document.getElementById('colorPickerModal').close();
+        }
+
+        function updatePreview() {
+            // Update visibility
+            preview.name.style.display = inputs.showName.checked ? 'block' : 'none';
+            preview.icon.parentElement.style.display = inputs.showIcon.checked ? 'block' : 'none';
+            preview.state.style.display = inputs.showState.checked ? 'block' : 'none';
+            preview.label.style.display = inputs.showLabel.checked ? 'block' : 'none';
+
+            // Update content
+            preview.name.textContent = inputs.name.value || 'Button';
+            preview.label.textContent = inputs.label.value || '';
+
+            // Update icon
+            const iconName = inputs.icon.value || 'lightbulb';
+            preview.icon.className = `mdi mdi-${iconName} text-4xl`;
+
+            // Update card style
+            preview.card.style.backgroundColor = inputs.bgColor.value;
+            preview.card.style.borderRadius = inputs.borderRadius.value;
+            preview.card.style.height = inputs.cardHeight.value;
+
+            // Update based on state
+            const isOn = inputs.stateToggle.checked;
+            const iconColor = isOn ? inputs.iconColorOn.value : inputs.iconColor.value;
+            const textColor = isOn ? inputs.iconColorOn.value : inputs.iconColor.value;
+
+            preview.icon.style.color = iconColor;
+            preview.name.style.color = textColor;
+            preview.label.style.color = textColor;
+            preview.state.style.color = textColor;
+            preview.state.textContent = isOn ? 'on' : 'off';
+
+            if (isOn) {
+                preview.icon.classList.add('icon-glow');
+                // Use the on state icon color for the box shadow with 0.3 alpha
+                const shadowColor = hexToRgba(inputs.iconColorOn.value, 0.3);
+                preview.card.style.boxShadow = `0 8px 24px ${shadowColor}`;
+            } else {
+                preview.icon.classList.remove('icon-glow');
+                preview.card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+            }
+
+            generateYAML();
+        }
+
+        function generateYAML() {
+            const iconName = inputs.icon.value || 'lightbulb';
+            const yaml = `type: custom:button-card
+entity: ${inputs.entity.value}
+icon: mdi:${iconName}
+name: ${inputs.name.value}
+${inputs.label.value ? `label: ${inputs.label.value}` : ''}
+show_name: ${inputs.showName.checked}
+show_icon: ${inputs.showIcon.checked}
+show_state: ${inputs.showState.checked}
+show_label: ${inputs.showLabel.checked}
+styles:
+  card:
+    - background-color: "${inputs.bgColor.value}"
+    - border-radius: ${inputs.borderRadius.value}
+    - height: ${inputs.cardHeight.value}
+    - padding: 15px 0
+    - box-shadow: 0 4px 12px rgba(0,0,0,0.2)
+  icon:
+    - color: "${inputs.iconColor.value}"
+    - width: clamp(3.5rem, 4vw, 4.5rem)
+    - height: clamp(3.5rem, 4vw, 4.5rem)
+  name:
+    - color: "${inputs.iconColor.value}"
+    - font-size: clamp(.8rem, 1vw, 1.5rem)
+    - font-weight: 600
+  label:
+    - color: "${inputs.iconColor.value}"
+    - font-size: 0.7rem
+state:
+  - value: 'on'
+    styles:
+      card:
+        - box-shadow: 0 8px 24px ${hexToRgba(inputs.iconColorOn.value, 0.3)}
+      icon:
+        - color: "${inputs.iconColorOn.value}"
+        - animation: iconGlow 2s ease-in-out infinite
+      name:
+        - color: "${inputs.iconColorOn.value}"
+      label:
+        - color: "${inputs.iconColorOn.value}"
+tap_action:
+  action: more-info
+hold_action:
+  action: toggle
+double_tap_action:
+  action: toggle`;
+
+            document.getElementById('yamlOutput').textContent = yaml;
+        }
+
+        function copyYAML() {
+            const yaml = document.getElementById('yamlOutput').textContent;
+            navigator.clipboard.writeText(yaml).then(() => {
+                const button = event.target.closest('button');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="mdi mdi-check mr-2"></i>Copied!';
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-success');
+
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-primary');
+                }, 2000);
+            });
+        }
+
+        // Add event listeners
+        Object.values(inputs).forEach(input => {
+            if (input.type === 'checkbox' || input.type === 'text') {
+                input.addEventListener('input', updatePreview);
+            }
+        });
+
+        // Initialize preview
+        updatePreview();
+    </script>
+</body>
+</html>
